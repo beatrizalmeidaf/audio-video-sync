@@ -1,0 +1,14 @@
+torch
+transformers
+TTS
+yt-dlp
+torchaudio
+librosa
+soundfile
+numpy
+IPython
+opt-einsum
+pyrubberband
+accelerate 
+
+#python=3.9
