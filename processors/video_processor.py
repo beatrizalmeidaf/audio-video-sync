@@ -5,7 +5,7 @@ import numpy as np
 import soundfile as sf
 from .audio_processor import AudioVADSlicer, process_segment_audio
 
-def process_video(video_path, temp_dir, tts, pipe, output_dir):
+def process_video(video_path, temp_dir, api_url, pipe, output_dir):
     """
     Processa um vídeo extraindo o áudio, segmentando-o usando detecção de atividade vocal (VAD),
     transcrevendo e traduzindo os segmentos de áudio, sintetizando o áudio traduzido
@@ -96,15 +96,22 @@ def process_video(video_path, temp_dir, tts, pipe, output_dir):
                 print(f"Error processing segment {i}: {e}")
                 continue
 
-        print("\nGenerating translated audio...")
+        print("\nGenerating translated audio via API...")
         for i, segment in enumerate(audio_segments, 1):
             try:
                 print(f"\nSynthesizing segment {i}/{len(audio_segments)}")
                 if not segment["translation"]:
-                    print(f"Skipping segment {i} - no translation available")
                     continue
 
-                process_segment_audio(tts, segment, temp_dir, sample_rate, audio_converted, audio_original)
+                process_segment_audio(
+                    api_url, 
+                    segment, 
+                    temp_dir, 
+                    sample_rate, 
+                    audio_converted, 
+                    audio_original,
+                    full_ref_path=audio_path 
+                )
 
                 torch.cuda.empty_cache() if torch.cuda.is_available() else None
 

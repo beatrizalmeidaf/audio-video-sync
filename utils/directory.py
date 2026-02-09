@@ -1,13 +1,9 @@
 import os
 
-""" 
-
-Cria os diretórios necessários
-
-"""
-
-
 def create_directory_structure():
+    """ 
+    Cria os diretórios necessários
+    """
     try:
         script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         

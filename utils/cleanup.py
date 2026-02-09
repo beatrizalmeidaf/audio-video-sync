@@ -4,7 +4,6 @@ import shutil
 def clean_temp_directory(temp_dir):
     """
     Limpa os arquivos temporários
-    
     """
     try:
         if os.path.exists(temp_dir):

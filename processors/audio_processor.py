@@ -4,6 +4,7 @@ import numpy as np
 import soundfile as sf
 import librosa
 import warnings
+from utils.api_client import generate_voice_clone
 warnings.filterwarnings('ignore')
 
 class AudioVADSlicer:
@@ -99,80 +100,73 @@ class AudioVADSlicer:
         except Exception as e:
             raise Exception(f"Error processing audio segments: {e}")
 
-def process_segment_audio(tts, segment, temp_dir, sample_rate, audio_converted, audio_original):
-    from models.audio_processing import calculate_tts_speed
+def process_segment_audio(api_url, segment, temp_dir, sample_rate, audio_converted, audio_original, full_ref_path):
+    """
+    Processa um segmento de áudio: envia para a API, recebe o áudio sintetizado, ajusta duração e volume, e mescla no áudio final.
+    """
     import pyrubberband as pyrb
     
     start_sample = int(segment["start"])
     end_sample = int(segment["end"])
     target_duration = segment["duration"]
+    
+    print(f"   -> Sending to API ({api_url})...")
+    
+    audio_content = generate_voice_clone(
+        text=segment["translation"],
+        ref_audio_path=full_ref_path, 
+        api_url=api_url,
+        speed=1.0 
+    )
 
-    ref_audio_path = os.path.join(temp_dir, f"ref_audio_{start_sample}.wav")
-    segment_audio_np = segment["audio"].numpy().squeeze()
-    sf.write(ref_audio_path, segment_audio_np, 24000)
+    if audio_content and len(audio_content) > 1000: 
+        temp_path = os.path.join(temp_dir, f"temp_api_{start_sample}.wav")
+        with open(temp_path, 'wb') as f:
+            f.write(audio_content)
 
-    max_attempts = 3
-    best_audio = None
-    best_duration_diff = float('inf')
-    best_speed = 1.0
+        try:
+            best_audio, _ = librosa.load(temp_path, sr=sample_rate)
 
-    for attempt in range(max_attempts):
-        if attempt == 0:
-            speed = 1.0
-        else:
-            speed = calculate_tts_speed(len(best_audio) / sample_rate, target_duration)
+            # ajuste de Velocidade (Time-Stretching)
+            current_duration = len(best_audio) / sample_rate
+            
+            if current_duration > 0:
+                final_speed_adjustment = current_duration / target_duration
+                
+                # tolerância maior: só ajusta se diferença for > 15%
+                if abs(current_duration - target_duration) > 0.15:
+                    final_speed_adjustment = np.clip(final_speed_adjustment, 0.6, 1.8) # limites seguros
+                    best_audio = pyrb.time_stretch(best_audio, sample_rate, final_speed_adjustment)
 
-        temp_path = os.path.join(temp_dir, f"temp_translated_{start_sample}_{attempt}.wav")
-        tts.tts_to_file(
-            text=segment["translation"],
-            file_path=temp_path,
-            speaker_wav=ref_audio_path,
-            language="en",
-            speed=speed
-        )
+            # ajuste de tamanho (corte ou padding)
+            target_len = end_sample - start_sample
+            if len(best_audio) > target_len:
+                best_audio = best_audio[:target_len]
+            elif len(best_audio) < target_len:
+                best_audio = np.pad(best_audio, (0, target_len - len(best_audio)))
 
-        temp_audio, _ = librosa.load(temp_path, sr=sample_rate)
-        current_duration = len(temp_audio) / sample_rate
-        duration_diff = abs(current_duration - target_duration)
+            # normalização de volume 
+            segment_original = audio_original[start_sample:end_sample]
+            rms_orig = np.sqrt(np.mean(segment_original**2))
+            rms_new = np.sqrt(np.mean(best_audio**2))
+            
+            if rms_new > 0.001: # evita explodir áudio mudo
+                best_audio = best_audio * (rms_orig / rms_new)
 
-        if duration_diff < best_duration_diff:
-            best_audio = temp_audio
-            best_duration_diff = duration_diff
-            best_speed = speed
+            # crossfade
+            fade_len = int(0.01 * sample_rate)
+            if len(best_audio) > 2*fade_len:
+                best_audio[:fade_len] *= np.linspace(0, 1, fade_len)
+                best_audio[-fade_len:] *= np.linspace(1, 0, fade_len)
 
-        os.remove(temp_path)
-
-        if duration_diff < 0.05:
-            break
-
-    print(f"Final speed: {best_speed:.2f}, Duration diff: {best_duration_diff:.3f}s")
-
-    if best_audio is not None:
-        final_speed = len(best_audio) / sample_rate / target_duration
-        if abs(len(best_audio) / sample_rate - target_duration) > 0.05:
-            best_audio = pyrb.time_stretch(best_audio, sample_rate, final_speed)
-
-        if len(best_audio) > (end_sample - start_sample):
-            best_audio = best_audio[:(end_sample - start_sample)]
-        elif len(best_audio) < (end_sample - start_sample):
-            padding = np.zeros((end_sample - start_sample) - len(best_audio))
-            best_audio = np.concatenate([best_audio, padding])
-
-        rms_original = np.sqrt(np.mean(segment_audio_np**2))
-        rms_translated = np.sqrt(np.mean(best_audio**2)) if len(best_audio) > 0 else 1
-        if rms_translated > 0:
-            volume_factor = rms_original / rms_translated
-            best_audio = best_audio * volume_factor
-
-        fade_samples = int(0.02 * sample_rate)
-        fade_in = np.linspace(0, 1, fade_samples)
-        fade_out = np.linspace(1, 0, fade_samples)
-        best_audio[:fade_samples] *= fade_in
-        best_audio[-fade_samples:] *= fade_out
-
-        audio_converted[start_sample:start_sample + len(best_audio)] = best_audio
+            audio_converted[start_sample:start_sample+len(best_audio)] = best_audio
+            print("   -> Success (Audio merged)")
+            
+        except Exception as e:
+            print(f"   -> Error processing downloaded audio: {e}")
+            audio_converted[start_sample:end_sample] = audio_original[start_sample:end_sample]
+            
+        if os.path.exists(temp_path): os.remove(temp_path)
     else:
+        print("   -> API returned empty/invalid data. Fallback to original.")
         audio_converted[start_sample:end_sample] = audio_original[start_sample:end_sample]
-
-    if os.path.exists(ref_audio_path):
-        os.remove(ref_audio_path)

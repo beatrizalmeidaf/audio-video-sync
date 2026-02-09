@@ -26,6 +26,7 @@ def read_audio(path):
     except Exception as e:
         raise Exception(f"Error reading audio file: {e}")
 
+
 def resample_wav(wav, sr, new_sr):
     """
     Ressampleia o áudio para uma nova taxa de amostragem.
@@ -48,6 +49,7 @@ def resample_wav(wav, sr, new_sr):
         return wav.squeeze(0)
     except Exception as e:
         raise Exception(f"Error resampling audio: {e}")
+
 
 def map_timestamps_to_new_sr(vad_sr, new_sr, timestamps, just_begging_end=False):
     """
@@ -79,6 +81,7 @@ def map_timestamps_to_new_sr(vad_sr, new_sr, timestamps, just_begging_end=False)
     except Exception as e:
         raise Exception(f"Error mapping timestamps: {e}")
 
+
 def get_vad_model_and_utils(use_cuda=False):
     """
     Carrega o modelo de detecção de voz (VAD) e suas funções utilitárias.
@@ -101,6 +104,7 @@ def get_vad_model_and_utils(use_cuda=False):
     except Exception as e:
         raise Exception(f"Error loading VAD model: {e}")
 
+
 def adjust_speed(audio, sr, target_duration, min_rate=0.8, max_rate=1.5):
     """
     Ajusta a velocidade do áudio para atingir uma duração alvo.
@@ -121,6 +125,7 @@ def adjust_speed(audio, sr, target_duration, min_rate=0.8, max_rate=1.5):
     rate = np.clip(rate * 1.01, min_rate, max_rate)
     adjusted_audio = pyrb.time_stretch(audio, sr, rate)
     return adjusted_audio
+
 
 def calculate_tts_speed(current_duration, target_duration):
     """

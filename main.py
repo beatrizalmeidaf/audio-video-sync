@@ -7,6 +7,8 @@ from utils.cleanup import clean_temp_directory
 
 def main():
     try:
+        API_URL = "http://44.192.41.163:7000/voice_clone"
+
         print("\n=== Video Translation System ===")
         print("\nStep 1: Creating working directories...")
         directories = create_directory_structure()
@@ -16,7 +18,7 @@ def main():
         
         print("\nStep 2: Initializing models...")
         print("This may take several minutes on first run as models need to be downloaded...")
-        tts, pipe = initialize_models(directories['models'])
+        _, pipe = initialize_models(directories['models'])
 
         print("\nStep 3: Video Input")
         video_input = input("Enter the path to your video file or YouTube URL: ").strip()
@@ -31,8 +33,15 @@ def main():
             if not os.path.exists(video_path):
                 raise FileNotFoundError(f"Video file not found: {video_path}")
 
-        print("\nStep 4: Processing video...")
-        output_video_path = process_video(video_path, directories['temp'], tts, pipe, directories['videos'])
+        print(f"\nStep 4: Processing video using API: {API_URL}...")
+        # passa API_URL
+        output_video_path = process_video(
+            video_path, 
+            directories['temp'], 
+            API_URL, 
+            pipe, 
+            directories['videos']
+        )
 
         print("\nStep 5: Cleanup")
         print("Cleaning up temporary files...")
