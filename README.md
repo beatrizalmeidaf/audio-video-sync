@@ -38,6 +38,9 @@ cd audio-video-sync
 ```bash
 conda create -n sync python=3.9 -y
 conda activate sync
+
+# OU
+source .venv/bin/activate
 ```
 
 
@@ -71,6 +74,11 @@ Execute o arquivo principal:
 python main.py
 
 ```
+
+## Docker
+
+docker build -t video-translator .
+docker run -it --rm -v %cd%:/app video-translator
 
 O terminal irá solicitar:
 

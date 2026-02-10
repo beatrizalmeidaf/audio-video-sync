@@ -147,3 +147,6 @@ wrapt==2.1.1
 yarl==1.22.0
 yt-dlp==2025.10.14
 zipp==3.23.0
+
+pip uninstall -y numpy transformers
+pip install "numpy<1.24" "transformers<4.38"

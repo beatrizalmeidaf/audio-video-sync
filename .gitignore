@@ -1,3 +1,5 @@
 __pycache__/
 tts_workspace/
 videos/
+.python-version
+.venv/
