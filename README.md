@@ -77,8 +77,10 @@ python main.py
 
 ## Docker
 
+```bash
 docker build -t video-translator .
 docker run -it --rm -v %cd%:/app video-translator
+```
 
 O terminal irá solicitar:
 

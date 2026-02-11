@@ -7,7 +7,7 @@ from utils.cleanup import clean_temp_directory
 
 def main():
     try:
-        API_URL = "http://44.192.41.163:7000/voice_clone"
+        API_URL = "http://44.192.41.163:9000/voice_clone"
 
         print("\n=== Video Translation System ===")
         print("\nStep 1: Creating working directories...")
