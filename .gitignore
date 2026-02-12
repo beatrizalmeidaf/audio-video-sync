@@ -3,3 +3,4 @@ tts_workspace/
 videos/
 .python-version
 .venv/
+hf_cache/

@@ -2,35 +2,74 @@
 
 Esse projeto é um pipeline automatizado para tradução de vídeos (Português → Inglês) preservando a voz original do locutor (Voice Cloning).
 
-O sistema integra o poder do OpenAI Whisper (local) para transcrição e tradução com APIs externas de Clonagem de Voz (Mira/Qwen), utilizando algoritmos de processamento de sinal (Time Stretching) para sincronizar o áudio gerado com o vídeo original.
+O sistema integra o poder do **OpenAI Whisper** (local) para transcrição e tradução com APIs externas da Ermis de **Clonagem de Voz** (Mira/Qwen), utilizando algoritmos de processamento de sinal (Time Stretching) para sincronizar o áudio gerado com o vídeo original.
 
 ## Funcionalidades
 
+* **CLI Robusta:** Interface de linha de comando para fácil automação.
 * **Entrada Flexível:** Aceita arquivos de vídeo locais (`.mp4`, `.avi`, etc.) ou URLs do YouTube.
+* **Docker Ready:** Ambiente containerizado que já inclui todas as dependências complexas (FFmpeg, Rubberband).
 * **Transcrição & Tradução:** Utiliza `Whisper Large v3` localmente para máxima precisão.
-* **Segmentação Inteligente:** Usa `Silero VAD` para detectar fala e ignorar silêncios, garantindo cortes precisos.
-* **Clonagem de Voz (API):** Integração com APIs externas de TTS (Text-to-Speech) generative (portas 7000/9000).
-* **Sincronia Temporal:** Ajusta a velocidade do áudio gerado (`pyrubberband`) para bater com a duração da fala original (Lip-sync approximation).
-* **Montagem Automática:** Recompila o vídeo final com o novo áudio usando FFmpeg.
+* **Segmentação Inteligente:** Usa `Silero VAD` para detectar fala e ignorar silêncios.
+* **Clonagem de Voz (API):** Suporte nativo para modelos **Mira** (Porta 7000) e **Qwen** (Porta 9000).
+* **Sincronia Temporal:** Ajusta a velocidade do áudio gerado para bater com a duração da fala original (Lip-sync approximation).
+* **Cache Persistente:** Otimizado para não baixar modelos repetidamente ao usar Docker.
 
-## Pré-requisitos
 
-Precisa ter as seguintes dependências de sistema instaladas:
+## Como Usar (Docker)
+
+### 1. Construir a Imagem
+
+```bash
+docker build -t video-translator .
+
+```
+
+### 2. Executar
+
+Deve passar a URL/Arquivo e o Modelo (`mira` ou `qwen`) via linha de comando.
+
+**No Linux / WSL:**
+
+```bash
+# exemplo com URL do YouTube e modelo Qwen
+docker run -it --rm -v $(pwd):/app video-translator --model qwen --url "https://youtu.be/SEU_VIDEO_AQUI"
+
+# exemplo com arquivo local e modelo Mira (o arquivo input.mp4 deve estar na pasta atual)
+docker run -it --rm -v $(pwd):/app video-translator --model mira --url "input.mp4"
+
+```
+
+**No Windows (Command Prompt / CMD):**
+
+```cmd
+docker run -it --rm -v %cd%:/app video-translator --model qwen --url "https://youtu.be/SEU_VIDEO_AQUI"
+
+```
+
+> **Nota:** Os vídeos traduzidos serão salvos automaticamente na pasta `videos/` com o nome do modelo utilizado (ex: `translated_QWEN_video.mp4`).
+
+
+## Instalação Manual (Sem Docker)
+
+Se preferir rodar localmente fora do Docker, precisará configurar o ambiente manualmente.
+
+### Pré-requisitos de Sistema
 
 1. **Python 3.9**
-2. **FFmpeg:** Essencial para extração e montagem de áudio/vídeo.
-* Ubuntu: `sudo apt install ffmpeg`
-* Windows: Baixe e adicione ao PATH.
-3. **Rubberband CLI:** Necessário para o pacote `pyrubberband`.
-* Ubuntu: `sudo apt install rubberband-cli`
-* Windows: Necessário baixar o executável do Rubberband.
+2. **FFmpeg:** Essencial para extração e montagem.
+3. **Rubberband CLI:** Obrigatório para o ajuste de tempo (Time Stretching).
+* *Windows:* Baixe o executável e adicione ao PATH do sistema.
+* *Linux:* `sudo apt-get install rubberband-cli`
 
-## Instalação
+
+### Passo a Passo
 
 1. **Clone o repositório:**
 ```bash
 git clone https://github.com/beatrizalmeidaf/audio-video-sync
 cd audio-video-sync
+
 ```
 
 
@@ -39,61 +78,32 @@ cd audio-video-sync
 conda create -n sync python=3.9 -y
 conda activate sync
 
-# OU
-source .venv/bin/activate
 ```
 
 
-3. **Instale as dependências Python:**
+3. **Instale as dependências:**
 ```bash
 pip install -r requirements.txt
 
 ```
 
-## Configuração da API
 
-O projeto suporta dois tipos de endpoints para a clonagem de voz.:
-
-```python
-API_URL = "http://44.192.41.163:7000/voice_clone" 
-# OU
-API_URL = "http://44.192.41.163:9000/voice_clone"
-
-```
-
-O sistema detecta automaticamente a porta e ajusta o payload:
-
-* **Porta 9000 (Qwen):** Envia campo `file` e aceita parâmetro `speed`.
-* **Porta 7000 (Mira):** Envia campo `audio` e não utiliza `speed` na requisição.
-
-## Como Usar
-
-Execute o arquivo principal:
-
+4. **Execute via CLI:**
 ```bash
-python main.py
+python main.py --model qwen --url "https://youtu.be/..."
 
 ```
 
-## Docker
+## Argumentos da CLI
 
-```bash
-docker build -t video-translator .
-docker run -it --rm -v %cd%:/app video-translator
-```
+O script `main.py` aceita os seguintes argumentos:
 
-O terminal irá solicitar:
+| Argumento | Obrigatório | Opções | Descrição |
+| --- | --- | --- | --- |
+| `--url` | Sim | URL ou Caminho | Link do YouTube ou caminho para arquivo local `.mp4`. |
+| `--model` | Sim | `mira`, `qwen` | Escolhe qual API de clonagem usar. |
 
-1. **Caminho do vídeo ou URL:**
-* Ex: `videos/palestra.mp4`
-* Ex: `https://www.youtube.com/watch?v=...`
+**Detalhes dos Modelos:**
 
-
-**O processo seguirá as etapas:**
-
-1. Download (se for YouTube) e extração do áudio.
-2. Carregamento dos modelos (Whisper e VAD).
-3. Segmentação e Transcrição.
-4. Envio para API de Clonagem.
-5. Pós-processamento (Ajuste de velocidade e volume).
-6. Geração do vídeo final na pasta `videos/`.
+* **`--model mira`**: Conecta na porta `7000`. Envia áudio como referência.
+* **`--model qwen`**: Conecta na porta `9000`. Envia arquivo + parâmetro de velocidade.

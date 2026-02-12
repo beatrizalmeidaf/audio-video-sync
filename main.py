@@ -1,4 +1,5 @@
 import os
+import argparse
 from utils.directory import create_directory_structure
 from utils.download import is_youtube_url, download_youtube_video
 from models.model_loader import initialize_models
@@ -6,24 +7,32 @@ from processors.video_processor import process_video
 from utils.cleanup import clean_temp_directory
 
 def main():
-    try:
-        API_URL = "http://44.192.41.163:9000/voice_clone"
+    parser = argparse.ArgumentParser(description="Video Translation CLI")
+    parser.add_argument("--url", type=str, required=True, help="YouTube URL or local file path")
+    parser.add_argument("--model", type=str, choices=["mira", "qwen"], required=True, help="Choose model: 'mira' (Port 7000) or 'qwen' (Port 9000)")
+    
+    args = parser.parse_args()
 
+    # define a API baseada na escolha
+    if args.model == "mira":
+        API_URL = "http://44.192.41.163:7000/voice_clone"
+        print(f"\n[Config] Using MIRA Model (Port 7000)")
+    else:
+        API_URL = "http://44.192.41.163:9000/voice_clone"
+        print(f"\n[Config] Using QWEN Model (Port 9000)")
+
+    try:
         print("\n=== Video Translation System ===")
         print("\nStep 1: Creating working directories...")
         directories = create_directory_structure()
-        print("✓ Directories created successfully")
-
+        
         clean_temp_directory(directories['temp'])
         
         print("\nStep 2: Initializing models...")
-        print("This may take several minutes on first run as models need to be downloaded...")
         _, pipe = initialize_models(directories['models'])
 
-        print("\nStep 3: Video Input")
-        video_input = input("Enter the path to your video file or YouTube URL: ").strip()
-        if not video_input:
-            raise ValueError("Input cannot be empty")
+        print(f"\nStep 3: Processing Input: {args.url}")
+        video_input = args.url
         
         if is_youtube_url(video_input):
             print("YouTube URL detected")
@@ -33,18 +42,18 @@ def main():
             if not os.path.exists(video_path):
                 raise FileNotFoundError(f"Video file not found: {video_path}")
 
-        print(f"\nStep 4: Processing video using API: {API_URL}...")
-        # passa API_URL
+        print(f"\nStep 4: Processing video using API...")
+        
         output_video_path = process_video(
             video_path, 
             directories['temp'], 
             API_URL, 
             pipe, 
-            directories['videos']
+            directories['videos'],
+            model_name=args.model 
         )
 
         print("\nStep 5: Cleanup")
-        print("Cleaning up temporary files...")
         clean_temp_directory(directories['temp'])
 
         print(f"\n✓ Translation complete!")
@@ -54,7 +63,6 @@ def main():
     except Exception as e:
         print(f"\nError: {e}")
         print("Translation process failed.")
-
         try:
             clean_temp_directory(directories['temp'])
         except:

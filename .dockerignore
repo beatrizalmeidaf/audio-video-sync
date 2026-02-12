@@ -15,3 +15,4 @@ videos/
 tts_workspace/
 *.mp4
 *.wav
+hf_cache/

@@ -5,24 +5,9 @@ import numpy as np
 import soundfile as sf
 from .audio_processor import AudioVADSlicer, process_segment_audio
 
-def process_video(video_path, temp_dir, api_url, pipe, output_dir):
+def process_video(video_path, temp_dir, api_url, pipe, output_dir, model_name="model"):
     """
-    Processa um vídeo extraindo o áudio, segmentando-o usando detecção de atividade vocal (VAD),
-    transcrevendo e traduzindo os segmentos de áudio, sintetizando o áudio traduzido
-    e gerando um vídeo final traduzido.
-
-    Args:
-        video_path (str): Caminho para o arquivo de vídeo de entrada.
-        temp_dir (str): Diretório para armazenar arquivos temporários.
-        tts: Instância do modelo de texto para fala.
-        pipe: Pipeline para transcrição e tradução.
-        output_dir (str): Diretório para salvar o vídeo final de saída.
-
-    Returns:
-        str: Caminho para o vídeo traduzido gerado.
-
-    Raises:
-        Exception: Se ocorrer algum erro durante o processamento do vídeo.
+    Processa o vídeo e salva com o nome do modelo no arquivo final.
     """
     try:
         if not os.path.exists(video_path):
@@ -124,11 +109,14 @@ def process_video(video_path, temp_dir, api_url, pipe, output_dir):
         sf.write(output_audio_path, audio_converted, sample_rate)
 
         print("Creating final video...")
-        video_filename = f"translated_{os.path.basename(video_path)}"
+        
+        original_name = os.path.splitext(os.path.basename(video_path))[0]
+        video_filename = f"translated_{model_name.upper()}_{original_name}.mp4"
+        
         output_video_path = os.path.join(output_dir, video_filename)
 
         if video_path.endswith('.m4a'):
-            ffmpeg_cmd = (
+             ffmpeg_cmd = (
                 f'ffmpeg -y -f lavfi -i color=c=black:s=1280x720:r=30 -i "{output_audio_path}" '
                 f'-shortest -c:v libx264 -c:a aac -strict experimental "{output_video_path}"'
             )
