@@ -1,37 +1,34 @@
 import os
 import torch
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+import kagglehub
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor as SpeechProcessor, pipeline
 
 def initialize_models(models_dir):
     try:
         print("\n=== Initializing Models ===")
 
-        print("\n1. Setting up Whisper model (Local)...")
+        # --- 1. WHISPER (Para Transcrição) ---
+        print("\n1. Setting up Whisper model (Transcription)...")
         use_gpu = torch.cuda.is_available()
         device = "cuda" if use_gpu else "cpu"
         
         print(f"- Using device: {device}")
         
-        model_id = "openai/whisper-large-v3"
-        torch_dtype = torch.float16 if use_gpu else torch.float32
+        whisper_id = "openai/whisper-large-v3"
+        torch_dtype = torch.bfloat16 if use_gpu else torch.float32
 
-        model = AutoModelForSpeechSeq2Seq.from_pretrained(
-            model_id,
-            torch_dtype=torch_dtype,
-            low_cpu_mem_usage=True,
-            use_safetensors=True
+        whisper_model = AutoModelForSpeechSeq2Seq.from_pretrained(
+            whisper_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
         )
-        
-        if use_gpu:
-            model = model.to(device)
+        if use_gpu: whisper_model = whisper_model.to(device)
 
-        processor = AutoProcessor.from_pretrained(model_id)
+        whisper_processor = SpeechProcessor.from_pretrained(whisper_id)
 
-        pipe = pipeline(
+        whisper_pipe = pipeline(
             "automatic-speech-recognition",
-            model=model,
-            tokenizer=processor.tokenizer,
-            feature_extractor=processor.feature_extractor,
+            model=whisper_model,
+            tokenizer=whisper_processor.tokenizer,
+            feature_extractor=whisper_processor.feature_extractor,
             max_new_tokens=128,
             chunk_length_s=30,
             batch_size=1,
@@ -39,9 +36,23 @@ def initialize_models(models_dir):
             torch_dtype=torch_dtype,
             device=device,
         )
-        print("✓ Whisper model loaded successfully")
+        print("✓ Whisper loaded successfully")
+
+        # TRANSLATEGEMMA (Tradução) 
+        print("\n2. Setting up TranslateGemma model (Translation)...")
+        print("- Downloading model from Kaggle (4B parameters)...")
         
-        return None, pipe
+        gemma_path = kagglehub.model_download("google/translategemma/transformers/translategemma-4b-it")
+        
+        gemma_pipe = pipeline(
+            "image-text-to-text", # conforme documentação
+            model=gemma_path,
+            device=device,
+            torch_dtype=torch_dtype
+        )
+        print("✓ TranslateGemma loaded successfully")
+        
+        return whisper_pipe, gemma_pipe
         
     except Exception as e:
         print(f"Error initializing models: {e}")

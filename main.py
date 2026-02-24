@@ -29,7 +29,7 @@ def main():
         clean_temp_directory(directories['temp'])
         
         print("\nStep 2: Initializing models...")
-        _, pipe = initialize_models(directories['models'])
+        whisper_pipe, gemma_pipe = initialize_models(directories['models'])
 
         print(f"\nStep 3: Processing Input: {args.url}")
         video_input = args.url
@@ -48,9 +48,10 @@ def main():
             video_path, 
             directories['temp'], 
             API_URL, 
-            pipe, 
+            whisper_pipe,  # Passa o whisper
+            gemma_pipe,    # Passa o gemma
             directories['videos'],
-            model_name=args.model 
+            model_name=args.model
         )
 
         print("\nStep 5: Cleanup")

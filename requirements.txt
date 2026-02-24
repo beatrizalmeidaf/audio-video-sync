@@ -147,5 +147,6 @@ wrapt==2.1.1
 yarl==1.22.0
 yt-dlp==2025.10.14
 zipp==3.23.0
-
+transformers
+kagglehub
 

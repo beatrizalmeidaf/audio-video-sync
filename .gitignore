@@ -4,3 +4,4 @@ videos/
 .python-version
 .venv/
 hf_cache/
+.env

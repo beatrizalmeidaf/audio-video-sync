@@ -5,7 +5,7 @@ import numpy as np
 import soundfile as sf
 from .audio_processor import AudioVADSlicer, process_segment_audio
 
-def process_video(video_path, temp_dir, api_url, pipe, output_dir, model_name="model"):
+def process_video(video_path, temp_dir, api_url, whisper_pipe, gemma_pipe, output_dir, model_name="model"):
     """
     Processa o vídeo e salva com o nome do modelo no arquivo final.
     """
@@ -64,13 +64,34 @@ def process_video(video_path, temp_dir, api_url, pipe, output_dir, model_name="m
             try:
                 print(f"\nSegment {i}/{len(audio_segments)}")
 
-                transcription = pipe(segment["audio_path"],
-                                  generate_kwargs={"task": "transcribe",
-                                                 "language": "portuguese"})["text"]
+                # transcreve com Whisper
+                transcription = whisper_pipe(
+                    segment["audio_path"],
+                    generate_kwargs={"task": "transcribe", "language": "portuguese"}
+                )["text"]
+                
+                print(f"   [Whisper] Transcrito: {transcription[:50]}...")
 
-                translation = pipe(segment["audio_path"],
-                                generate_kwargs={"task": "translate",
-                                               "language": "english"})["text"]
+                # traduz com TranslateGemma
+                messages = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "source_lang_code": "pt", # Português
+                                "target_lang_code": "en", # Inglês
+                                "text": transcription,
+                            }
+                        ],
+                    }
+                ]
+
+                # passa pelo pipeline conforme a documentação
+                gemma_output = gemma_pipe(text=messages, max_new_tokens=200)
+                translation = gemma_output[0]["generated_text"][-1]["content"]
+                
+                print(f"   [Gemma] Traduzido: {translation[:50]}...")
 
                 segment["transcription"] = transcription
                 segment["translation"] = translation
