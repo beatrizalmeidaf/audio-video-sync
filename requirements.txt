@@ -9,3 +9,5 @@ transformers>=4.48.0
 yt-dlp
 accelerate
 huggingface_hub
+pillow
+torchcodec

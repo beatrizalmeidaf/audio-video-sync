@@ -1,7 +1,7 @@
 import os
 from huggingface_hub import login, snapshot_download
 
-HF_TOKEN = "api"
+HF_TOKEN = "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"
 
 print("1. Fazendo login no Hugging Face...")
 login(token=HF_TOKEN)

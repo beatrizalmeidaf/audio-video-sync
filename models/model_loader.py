@@ -1,68 +1,63 @@
 import os
 import torch
-from huggingface_hub import login
+import gc
+from huggingface_hub import login, snapshot_download
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor as SpeechProcessor, pipeline
 
-def initialize_models(models_dir):
-    try:
-        print("\n=== Initializing Models ===")
+def authenticate_hf():
+    print("\n0. Authenticating with Hugging Face...")
+    hf_token = os.environ.get("HF_TOKEN", "").strip()
+    if hf_token:
+        login(token=hf_token)
+        print("✓ Hugging Face authenticated securely.")
+    else:
+        print("Warning: HF_TOKEN not found!")
+    return torch.cuda.is_available()
 
-        print("\n0. Authenticating with Hugging Face...")
-        hf_token = os.environ.get("HF_TOKEN", "").strip()
-        
-        if hf_token:
-            login(token=hf_token)
-            print("✓ Hugging Face authenticated securely.")
-        else:
-            print("Warning: HF_TOKEN not found in environment! Download will fail if the model is gated.")
+def load_whisper():
+    use_gpu = authenticate_hf()
+    device = "cuda" if use_gpu else "cpu"
+    torch_dtype = torch.bfloat16
 
-        # WHISPER (Transcrição) 
-        print("\n1. Setting up Whisper model (Transcription)...")
-        use_gpu = torch.cuda.is_available()
-        device = "cuda" if use_gpu else "cpu"
-        
-        print(f"- Using device: {device}")
-        
-        whisper_id = "openai/whisper-large-v3"
-        torch_dtype = torch.bfloat16 if use_gpu else torch.float32
+    print(f"\n1. Setting up Whisper model (Transcription) on {device}...")
+    whisper_id = "openai/whisper-large-v3"
 
-        whisper_model = AutoModelForSpeechSeq2Seq.from_pretrained(
-            whisper_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
-        )
-        if use_gpu: whisper_model = whisper_model.to(device)
+    whisper_model = AutoModelForSpeechSeq2Seq.from_pretrained(
+        whisper_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
+    )
+    if use_gpu: whisper_model = whisper_model.to(device)
 
-        whisper_processor = SpeechProcessor.from_pretrained(whisper_id)
+    whisper_processor = SpeechProcessor.from_pretrained(whisper_id)
 
-        whisper_pipe = pipeline(
-            "automatic-speech-recognition",
-            model=whisper_model,
-            tokenizer=whisper_processor.tokenizer,
-            feature_extractor=whisper_processor.feature_extractor,
-            max_new_tokens=128,
-            chunk_length_s=30,
-            batch_size=1,
-            return_timestamps=True,
-            torch_dtype=torch_dtype,
-            device=device,
-        )
-        print("✓ Whisper loaded successfully")
+    whisper_pipe = pipeline(
+        "automatic-speech-recognition",
+        model=whisper_model,
+        tokenizer=whisper_processor.tokenizer,
+        feature_extractor=whisper_processor.feature_extractor,
+        chunk_length_s=30,
+        batch_size=1,
+        return_timestamps=True,
+        torch_dtype=torch_dtype,
+        device=device,
+    )
+    return whisper_pipe
 
-        # TRANSLATEGEMMA (Tradução) 
-        print("\n2. Setting up TranslateGemma model (Translation) from Hugging Face...")
-        
-        # ID exato do repositório no Hugging Face
-        gemma_id = "google/translategemma-4b-it"
-        
-        gemma_pipe = pipeline(
-            "image-text-to-text", 
-            model=gemma_id,
-            device=device,
-            torch_dtype=torch_dtype
-        )
-        print("✓ TranslateGemma loaded successfully")
-        
-        return whisper_pipe, gemma_pipe
-        
-    except Exception as e:
-        print(f"Error initializing models: {e}")
-        raise e
+def load_gemma():
+    use_gpu = torch.cuda.is_available() 
+    device = "cuda" if use_gpu else "cpu"
+    torch_dtype = torch.bfloat16
+
+    print(f"\n2. Setting up TranslateGemma model (Translation) on {device}...")
+    gemma_local_path = snapshot_download(
+        repo_id="google/translategemma-4b-it",
+        cache_dir="/app/hf_cache",
+        local_files_only=True 
+    )
+    
+    gemma_pipe = pipeline(
+        "image-text-to-text", 
+        model=gemma_local_path,
+        device=device,
+        torch_dtype=torch_dtype
+    )
+    return gemma_pipe
