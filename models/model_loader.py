@@ -1,13 +1,22 @@
 import os
 import torch
-import kagglehub
+from huggingface_hub import login
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor as SpeechProcessor, pipeline
 
 def initialize_models(models_dir):
     try:
         print("\n=== Initializing Models ===")
 
-        # --- 1. WHISPER (Para Transcrição) ---
+        print("\n0. Authenticating with Hugging Face...")
+        hf_token = os.environ.get("HF_TOKEN", "").strip()
+        
+        if hf_token:
+            login(token=hf_token)
+            print("✓ Hugging Face authenticated securely.")
+        else:
+            print("Warning: HF_TOKEN not found in environment! Download will fail if the model is gated.")
+
+        # WHISPER (Transcrição) 
         print("\n1. Setting up Whisper model (Transcription)...")
         use_gpu = torch.cuda.is_available()
         device = "cuda" if use_gpu else "cpu"
@@ -39,14 +48,14 @@ def initialize_models(models_dir):
         print("✓ Whisper loaded successfully")
 
         # TRANSLATEGEMMA (Tradução) 
-        print("\n2. Setting up TranslateGemma model (Translation)...")
-        print("- Downloading model from Kaggle (4B parameters)...")
+        print("\n2. Setting up TranslateGemma model (Translation) from Hugging Face...")
         
-        gemma_path = kagglehub.model_download("google/translategemma/transformers/translategemma-4b-it")
+        # ID exato do repositório no Hugging Face
+        gemma_id = "google/translategemma-4b-it"
         
         gemma_pipe = pipeline(
-            "image-text-to-text", # conforme documentação
-            model=gemma_path,
+            "image-text-to-text", 
+            model=gemma_id,
             device=device,
             torch_dtype=torch_dtype
         )
