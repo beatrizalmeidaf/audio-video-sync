@@ -93,6 +93,8 @@ pip install -r requirements.txt
 
 4. **Execute via CLI:**
 ```bash
+python baixar_modelo.py # caso não tenha os arquivos baixados 
+
 python main.py --model qwen --url "https://youtu.be/..."
 
 ```
