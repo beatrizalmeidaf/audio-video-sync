@@ -6,7 +6,7 @@ librosa
 pyrubberband
 requests
 transformers>=4.48.0
-yt-dlp
+yt-dlp[default]
 accelerate
 huggingface_hub
 pillow

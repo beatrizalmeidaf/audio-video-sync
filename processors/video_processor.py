@@ -109,7 +109,13 @@ def process_video(video_path, temp_dir, api_url, output_dir, model_name="model")
         if video_path.endswith('.m4a'):
              ffmpeg_cmd = f'ffmpeg -y -f lavfi -i color=c=black:s=1280x720:r=30 -i "{output_audio_path}" -shortest -c:v libx264 -c:a aac -strict experimental "{output_video_path}"'
         else:
-            ffmpeg_cmd = f'ffmpeg -y -i "{video_path}" -i "{output_audio_path}" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 "{output_video_path}"'
+            ffmpeg_cmd = (
+                f'ffmpeg -y -i "{video_path}" -i "{output_audio_path}" '
+                f'-filter_complex "[0:v]setpts=PTS-STARTPTS[v];[1:a]asetpts=PTS-STARTPTS[a]" '
+                f'-map "[v]" -map "[a]" '
+                f'-c:v libx264 -c:a aac -pix_fmt yuv420p -shortest '
+                f'-movflags +faststart "{output_video_path}"'
+            )
 
         if os.system(ffmpeg_cmd) != 0: raise Exception("Failed to combine audio with video")
 

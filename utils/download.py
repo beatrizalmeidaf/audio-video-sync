@@ -18,6 +18,8 @@ def download_youtube_video(url, temp_dir):
         ydl_opts = {
             "format": "bv*+ba/best",
             "outtmpl": output_path,
+            'cookiefile': '/app/cookies.txt',
+            'js_runtimes': {'node': {}},
             "merge_output_format": "mp4",
             "noplaylist": True,
             "quiet": False,

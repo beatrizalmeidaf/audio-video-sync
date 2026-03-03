@@ -33,17 +33,20 @@ Deve passar a URL/Arquivo e o Modelo (`mira` ou `qwen`) via linha de comando.
 
 ```bash
 # exemplo com URL do YouTube e modelo Qwen
-docker run -it --rm -v $(pwd):/app video-translator --model qwen --url "https://youtu.be/SEU_VIDEO_AQUI"
+docker run -it --rm -v $(pwd):/app video-translator --model qwen --url "https://youtu.be/VIDEO_AQUI"
 
 # exemplo com arquivo local e modelo Mira (o arquivo input.mp4 deve estar na pasta atual)
 docker run -it --rm -v $(pwd):/app video-translator --model mira --url "input.mp4"
+
+# com GPU (servidor)
+docker run -it --rm --gpus all --env-file .env -v $(pwd):/app video-translator --model qwen --url "https://youtu.be/7AzBE0ydjXs?si=Okb7fk7086A8-aBs"
 
 ```
 
 **No Windows (Command Prompt / CMD):**
 
 ```cmd
-docker run -it --rm -v %cd%:/app video-translator --model qwen --url "https://youtu.be/SEU_VIDEO_AQUI"
+docker run -it --rm -v %cd%:/app video-translator --model qwen --url "https://youtu.be/VIDEO_AQUI"
 
 ```
 

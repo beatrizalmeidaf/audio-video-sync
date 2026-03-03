@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     libsndfile1 \
     git \
     build-essential \
+    nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
