@@ -3,46 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Antigravity • Tradutor de Vídeo</title>
+    <title>Ermis • Tradutor de Vídeo</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="background-elements">
-        <div class="glow-orb orb-1"></div>
-        <div class="glow-orb orb-2"></div>
-    </div>
-
     <main class="container">
-        <header>
-            <h1 class="gradient-text">Tradutor de Vídeo</h1>
-            <p>Traduza vídeos com IA. Insira o vídeo abaixo.</p>
+        <header class="app-header">
+            <div class="brand">
+                <h1 class="gradient-text">Ermis</h1>
+            </div>
+            <p>Tradução de vídeo impulsionada por IA para criadores e empresas.</p>
         </header>
 
-        <section class="glass-panel">
+        <section class="card-panel">
             <div class="input-group">
-                <div class="file-upload-wrapper">
-                    <label for="video-file">Selecione o arquivo de vídeo:</label>
-                    <input type="file" id="video-file" accept="video/mp4,video/x-m4v,video/*">
+                
+                <div class="upload-section">
+                    <label class="section-label">Arquivo de Mídia</label>
+                    <div class="dropzone" id="dropzone">
+                        <i class="ph ph-upload-simple drop-icon"></i>
+                        <span class="drop-text">Arraste um vídeo ou <strong>clique para buscar</strong></span>
+                        <span class="drop-hint">Suporta MP4, MOV, M4V (Máx: 500MB)</span>
+                        <input type="file" id="video-file" accept="video/mp4,video/x-m4v,video/*" class="hidden-file-input">
+                    </div>
                 </div>
-                <div class="tts-model-wrapper">
-                    <label for="tts-model">Modelo de Síntese de Voz (TTS):</label>
-                    <select id="tts-model">
-                        <option value="qwen">Qwen</option>
-                        <option value="mira">Mira</option>
-                    </select>
+
+                <div id="video-preview-container" class="preview-container hidden">
+                    <div class="preview-header">
+                        <span id="file-name-display" class="file-name"><i class="ph ph-video"></i> video.mp4</span>
+                        <button id="remove-file-btn" class="icon-btn" title="Remover vídeo"><i class="ph ph-x"></i></button>
+                    </div>
+                    <video id="local-preview-video" controls playsinline class="local-preview"></video>
+                </div>
+
+                <div class="settings-section">
+                    <div class="tts-model-wrapper">
+                        <label class="section-label" for="tts-model">Motor de Síntese de Voz (TTS)</label>
+                        <div class="select-wrapper">
+                            <i class="ph ph-cpu select-icon"></i>
+                            <select id="tts-model">
+                                <option value="qwen">Qwen</option>
+                                <option value="mira">Mira</option>
+                            </select>
+                            <i class="ph ph-caret-down select-arrow"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <button id="translate-btn" class="primary-btn">
-                <span class="btn-text">Traduzir</span>
-                <span class="loader" style="display: none;"></span>
+            <button id="translate-btn" class="primary-btn" disabled>
+                <i class="ph ph-magic-wand btn-icon"></i>
+                <span class="btn-text">Iniciar Tradução</span>
+                <span class="loader hidden"></span>
             </button>
 
-            <!-- Progress Bar -->
             <div id="progress-container" class="progress-container hidden">
                 <div class="progress-info">
-                    <span id="progress-text">Iniciando processamento...</span>
+                    <span id="progress-text" class="status-text"><i class="ph ph-spinner-gap spin-icon"></i> Processando...</span>
                     <span id="progress-percentage">0%</span>
                 </div>
                 <div class="progress-bar-bg">
@@ -51,17 +70,22 @@
             </div>
         </section>
 
-        <section id="result-container" class="glass-panel result-panel hidden">
-            <h2 class="result-title">Vídeo Traduzido</h2>
-            <div class="video-wrapper">
-                <video id="output-video" controls playsinline>
-                    O seu navegador não suporta o formato de vídeo.
-                </video>
+        <section id="result-container" class="card-panel result-panel hidden">
+            <div class="result-header">
+                <h2 class="result-title"><i class="ph ph-check-circle text-success"></i> Tradução Concluída</h2>
             </div>
-            <a id="download-btn" href="#" target="_blank" class="secondary-btn" style="display: none;">Baixar Vídeo</a>
+            
+            <div class="video-wrapper">
+                <video id="output-video" controls playsinline></video>
+            </div>
+            
+            <a id="download-btn" href="#" target="_blank" class="secondary-btn">
+                <i class="ph ph-download-simple"></i> Baixar Vídeo Traduzido
+            </a>
         </section>
 
         <div id="error-toast" class="toast hidden">
+            <i class="ph ph-warning-circle"></i>
             <span id="error-msg">Erro ao traduzir o vídeo.</span>
         </div>
     </main>
