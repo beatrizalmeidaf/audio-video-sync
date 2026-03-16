@@ -23,4 +23,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-ENTRYPOINT ["python", "main.py"]
+# ENTRYPOINT ["python", "main.py"]
+# expõe a porta 7000 
+EXPOSE 7000
+ENTRYPOINT ["python", "app.py"]

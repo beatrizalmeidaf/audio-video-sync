@@ -139,7 +139,9 @@ def process_segment_audio(api_url, segment, temp_dir, sample_rate, audio_convert
                     best_audio = pyrb.time_stretch(best_audio, sample_rate, final_speed_adjustment)
 
             # ajuste de tamanho (corte ou padding)
-            target_len = end_sample - start_sample
+            max_allowed_len = len(audio_converted) - start_sample
+            target_len = min(end_sample - start_sample, max_allowed_len)
+
             if len(best_audio) > target_len:
                 best_audio = best_audio[:target_len]
             elif len(best_audio) < target_len:
@@ -163,10 +165,8 @@ def process_segment_audio(api_url, segment, temp_dir, sample_rate, audio_convert
             print("   -> Success (Audio merged)")
             
         except Exception as e:
-            print(f"   -> Error processing downloaded audio: {e}")
-            audio_converted[start_sample:end_sample] = audio_original[start_sample:end_sample]
+            if os.path.exists(temp_path): os.remove(temp_path)
+            raise Exception(f"Erro ao processar o áudio baixado da API: {e}")
             
-        if os.path.exists(temp_path): os.remove(temp_path)
     else:
-        print("   -> API returned empty/invalid data. Fallback to original.")
-        audio_converted[start_sample:end_sample] = audio_original[start_sample:end_sample]
+        raise Exception(f"A API de clonagem falhou ou retornou áudio vazio para o trecho {start_sample}.")

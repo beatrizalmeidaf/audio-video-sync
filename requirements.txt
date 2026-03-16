@@ -11,3 +11,9 @@ accelerate
 huggingface_hub
 pillow
 torchcodec
+litserve==0.2.3
+fastapi
+pydantic
+boto3
+uvicorn
+python-multipart

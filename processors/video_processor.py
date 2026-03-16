@@ -10,14 +10,18 @@ warnings.filterwarnings("ignore")
 from .audio_processor import AudioVADSlicer, process_segment_audio
 from models.model_loader import load_whisper, load_gemma
 
-def process_video(video_path, temp_dir, api_url, output_dir, model_name="model"):
+def process_video(video_path, temp_dir, api_url, output_dir, model_name="model", update_status=None, whisper_pipe=None, gemma_pipe=None):
+    def safe_update(prog, txt):
+        if update_status:
+            update_status(prog, txt)
+
     try:
         if not os.path.exists(video_path):
             raise FileNotFoundError(f"Video file not found: {video_path}")
 
         print("Extracting audio from video...")
         audio_path = os.path.join(temp_dir, "audio_original.wav")
-        ffmpeg_cmd = f'ffmpeg -y -i "{video_path}" -map 0:a -to 00:00:30 -acodec pcm_s16le -ar 16000 -ac 1 "{audio_path}"'
+        ffmpeg_cmd = f'ffmpeg -y -i "{video_path}" -map 0:a -acodec pcm_s16le -ar 16000 -ac 1 "{audio_path}"'
         if os.system(ffmpeg_cmd) != 0:
             raise Exception("Failed to extract audio from video")
 
@@ -49,10 +53,18 @@ def process_video(video_path, temp_dir, api_url, output_dir, model_name="model")
 
         # TRANSCRIÇÃO 
         print("\n=== TRANSCRIPTION (WHISPER) ===")
-        whisper_pipe = load_whisper()
+        _own_whisper = whisper_pipe is None
+        if _own_whisper:
+            safe_update(10.0, "Carregando modelo de transcrição...")
+            whisper_pipe = load_whisper()
+        else:
+            safe_update(10.0, "Transcrevendo áudio...")
         
         for i, segment in enumerate(audio_segments, 1):
             try:
+                prog = 10.0 + (30.0 * (i / len(audio_segments))) # 10 a 40%
+                safe_update(prog, f"Transcrevendo segmento {i}/{len(audio_segments)}")
+                
                 print(f"Segment {i}/{len(audio_segments)} [Transcribing]")
                 transcription = whisper_pipe(segment["audio_path"], generate_kwargs={"task": "transcribe", "language": "portuguese"})["text"]
                 segment["transcription"] = transcription
@@ -60,16 +72,25 @@ def process_video(video_path, temp_dir, api_url, output_dir, model_name="model")
             except Exception as e:
                 print(f"Error in transcription {i}: {e}")
                 
-        print("\n[Memory Manager] Unloading Whisper to free RAM...")
-        del whisper_pipe
-        gc.collect()
+        if _own_whisper:
+            print("\n[Memory Manager] Unloading Whisper to free RAM...")
+            del whisper_pipe
+            gc.collect()
 
-        # TRADUÇÃO ---
+        # TRADUÇÃO 
         print("\n=== TRANSLATION (GEMMA) ===")
-        gemma_pipe = load_gemma()
+        _own_gemma = gemma_pipe is None
+        if _own_gemma:
+            safe_update(40.0, "Carregando modelo de tradução...")
+            gemma_pipe = load_gemma()
+        else:
+            safe_update(40.0, "Traduzindo segmentos...")
         
         for i, segment in enumerate(audio_segments, 1):
             try:
+                prog = 40.0 + (30.0 * (i / len(audio_segments))) # 40 a 70%
+                safe_update(prog, f"Traduzindo segmento {i}/{len(audio_segments)}")
+                
                 if not segment.get("transcription"):
                     continue
                 print(f"Segment {i}/{len(audio_segments)} [Translating]")
@@ -83,20 +104,31 @@ def process_video(video_path, temp_dir, api_url, output_dir, model_name="model")
             except Exception as e:
                 print(f"Error in translation {i}: {e}")
 
-        print("\n[Memory Manager] Unloading Gemma to free RAM...")
-        del gemma_pipe
-        gc.collect()
+        if _own_gemma:
+            print("\n[Memory Manager] Unloading Gemma to free RAM...")
+            del gemma_pipe
+            gc.collect()
 
         # CLONAGEM DE VOZ E VÍDEO 
         print("\n=== VOICE CLONING & ASSEMBLE ===")
         for i, segment in enumerate(audio_segments, 1):
-            try:
-                print(f"Synthesizing segment {i}/{len(audio_segments)}")
-                if not segment["translation"]: continue
-                process_segment_audio(api_url, segment, temp_dir, sample_rate, audio_converted, audio_original, full_ref_path=audio_path)
-            except Exception as e:
-                print(f"Error processing segment {i}: {e}")
+            prog = 70.0 + (23.0 * (i / len(audio_segments))) # 70 a 93%
+            safe_update(prog, f"Clonando voz: segmento {i}/{len(audio_segments)}")
+            
+            print(f"Synthesizing segment {i}/{len(audio_segments)}")
+            if not segment["translation"]: continue
+            
+            process_segment_audio(
+                api_url, 
+                segment, 
+                temp_dir, 
+                sample_rate, 
+                audio_converted, 
+                audio_original, 
+                full_ref_path=segment["audio_path"]
+            )
 
+        safe_update(94.0, "Juntando áudio e vídeo...")
         print("\nSaving final audio...")
         output_audio_path = os.path.join(temp_dir, "audio_converted_adjusted.wav")
         sf.write(output_audio_path, audio_converted, sample_rate)

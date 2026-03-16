@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  api:
+    image: video-translator-api
+    container_name: video-translator-api
+    ports:
+      - "7000:7000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: always
+
+  frontend:
+    image: nginx:alpine
+    container_name: video-translator-frontend
+    ports:
+      - "8081:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    restart: always

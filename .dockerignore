@@ -17,3 +17,4 @@ tts_workspace/
 *.wav
 hf_cache/
 .env
+.vscode

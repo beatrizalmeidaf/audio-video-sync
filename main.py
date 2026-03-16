@@ -11,7 +11,7 @@ def main():
     parser.add_argument("--model", type=str, choices=["mira", "qwen"], required=True, help="Choose model: 'mira' or 'qwen'")
     args = parser.parse_args()
 
-    API_URL = "http://44.192.41.163:7000/voice_clone" if args.model == "mira" else "http://44.192.41.163:9000/voice_clone"
+    API_URL = "http://44.192.41.163:7000/voice_clone" if args.model == "mira" else "http://13.220.246.239:9000/voice_clone"
     print(f"\n[Config] Using {args.model.upper()} Model")
 
     try:

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity • Tradutor de Vídeo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-elements">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <main class="container">
+        <header>
+            <h1 class="gradient-text">Tradutor de Vídeo</h1>
+            <p>Traduza vídeos com IA. Insira o vídeo abaixo.</p>
+        </header>
+
+        <section class="glass-panel">
+            <div class="input-group">
+                <div class="file-upload-wrapper">
+                    <label for="video-file">Selecione o arquivo de vídeo:</label>
+                    <input type="file" id="video-file" accept="video/mp4,video/x-m4v,video/*">
+                </div>
+                <div class="tts-model-wrapper">
+                    <label for="tts-model">Modelo de Síntese de Voz (TTS):</label>
+                    <select id="tts-model">
+                        <option value="qwen">Qwen</option>
+                        <option value="mira">Mira</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="translate-btn" class="primary-btn">
+                <span class="btn-text">Traduzir</span>
+                <span class="loader" style="display: none;"></span>
+            </button>
+
+            <!-- Progress Bar -->
+            <div id="progress-container" class="progress-container hidden">
+                <div class="progress-info">
+                    <span id="progress-text">Iniciando processamento...</span>
+                    <span id="progress-percentage">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="result-container" class="glass-panel result-panel hidden">
+            <h2 class="result-title">Vídeo Traduzido</h2>
+            <div class="video-wrapper">
+                <video id="output-video" controls playsinline>
+                    O seu navegador não suporta o formato de vídeo.
+                </video>
+            </div>
+            <a id="download-btn" href="#" target="_blank" class="secondary-btn" style="display: none;">Baixar Vídeo</a>
+        </section>
+
+        <div id="error-toast" class="toast hidden">
+            <span id="error-msg">Erro ao traduzir o vídeo.</span>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

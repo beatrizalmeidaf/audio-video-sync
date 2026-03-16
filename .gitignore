@@ -5,3 +5,4 @@ videos/
 .venv/
 hf_cache/
 .env
+.vscode

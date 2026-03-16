@@ -31,8 +31,8 @@ def generate_voice_clone(text, ref_audio_path, api_url, speed=1.0):
                     # porta 7000: Mira (audio)
                     files = {'audio': ('ref.wav', f, 'audio/wav')}
 
-                # timeout de 5 minutos (300s) para evitar quedas em áudios longos
-                response = requests.post(api_url, files=files, data=data, timeout=300)
+                # timeout de 15 minutos (900s) para evitar quedas em áudios longos
+                response = requests.post(api_url, files=files, data=data, timeout=900)
 
             if response.status_code == 200:
                 content_type = response.headers.get('content-type', '')
