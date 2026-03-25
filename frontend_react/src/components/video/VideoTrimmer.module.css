@@ -1,0 +1,113 @@
+.trimmerCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.videoWrapper {
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-main);
+  border: 1px solid var(--border-strong);
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sliderContainer {
+  position: relative;
+  height: 30px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: var(--bg-main);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong);
+}
+
+.sliderTrack {
+  position: absolute;
+  height: 100%;
+  background: var(--primary-light);
+  border-left: 2px solid var(--primary);
+  border-right: 2px solid var(--primary);
+  border-radius: var(--radius-full);
+  pointer-events: none;
+}
+
+.slider {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  appearance: none;
+  background: none;
+  pointer-events: none;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 38px;
+  background: white;
+  border-radius: 4px;
+  cursor: ew-resize;
+  pointer-events: auto;
+  border: 2px solid var(--primary);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 38px;
+  background: white;
+  border-radius: 4px;
+  cursor: ew-resize;
+  pointer-events: auto;
+  border: 2px solid var(--primary);
+}
+
+.timeInfo {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+
+.timeBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.timeLabel {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.timeValue {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-main);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+}

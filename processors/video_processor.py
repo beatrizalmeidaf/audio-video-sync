@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 from .audio_processor import AudioVADSlicer, process_segment_audio
 from models.model_loader import load_whisper, load_gemma
 
-def process_video(video_path, temp_dir, api_url, output_dir, model_name="model", update_status=None, whisper_pipe=None, gemma_pipe=None):
+def process_video(video_path, temp_dir, api_url, output_dir, model_name="model", update_status=None, whisper_pipe=None, gemma_pipe=None, job_id=None):
     def safe_update(prog, txt):
         if update_status:
             update_status(prog, txt)
@@ -135,7 +135,8 @@ def process_video(video_path, temp_dir, api_url, output_dir, model_name="model",
 
         print("Creating final video...")
         original_name = os.path.splitext(os.path.basename(video_path))[0]
-        video_filename = f"translated_{model_name.upper()}_{original_name}.mp4"
+        prefix = f"translated_{job_id}_" if job_id else "translated_"
+        video_filename = f"{prefix}{model_name.upper()}_{original_name}.mp4"
         output_video_path = os.path.join(output_dir, video_filename)
 
         if video_path.endswith('.m4a'):

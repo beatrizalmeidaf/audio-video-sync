@@ -1,8 +1,11 @@
 import os
 import torch
 import gc
+from dotenv import load_dotenv
 from huggingface_hub import login, snapshot_download
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor as SpeechProcessor, pipeline
+
+load_dotenv()
 
 def authenticate_hf():
     print("\n0. Authenticating with Hugging Face...")
@@ -49,11 +52,9 @@ def load_gemma():
 
     print(f"\n2. Setting up TranslateGemma model (Translation) on {device}...")
     gemma_local_path = snapshot_download(
-        repo_id="google/translategemma-4b-it",
-        cache_dir="/app/hf_cache",
-        local_files_only=True 
+        repo_id="google/translategemma-4b-it"
     )
-    
+
     gemma_pipe = pipeline(
         "image-text-to-text", 
         model=gemma_local_path,

@@ -1,0 +1,109 @@
+.uploader {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  background-color: rgba(20, 21, 23, 0.4);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+}
+
+.uploader:hover, .uploader.dragging {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.uploadContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.iconCircle {
+  width: 64px;
+  height: 64px;
+  background: var(--bg-elevated);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  margin-bottom: 0.5rem;
+  transition: transform var(--transition-normal);
+}
+
+.uploader:hover .iconCircle {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+}
+
+.mainText {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.subText {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.hasFile {
+  border-style: solid;
+  border-color: var(--border-strong);
+  padding: 1.5rem;
+  cursor: default;
+}
+
+.hasFile:hover {
+  border-color: var(--border-strong);
+  background-color: rgba(20, 21, 23, 0.4);
+}
+
+.fileInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fileIcon {
+  color: var(--primary);
+}
+
+.fileDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.fileName {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 1rem;
+  word-break: break-all;
+}
+
+.fileSize {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.clearBtn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  transform: rotate(90deg);
+}

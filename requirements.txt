@@ -17,3 +17,7 @@ pydantic
 boto3
 uvicorn
 python-multipart
+PyJWT
+passlib[bcrypt]
+bcrypt==3.2.0
+python-dotenv

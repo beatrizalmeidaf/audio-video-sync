@@ -15,98 +15,33 @@ O sistema integra o poder do **OpenAI Whisper** (local) para transcrição e tra
 * **Sincronia Temporal:** Ajusta a velocidade do áudio gerado para bater com a duração da fala original (Lip-sync approximation).
 * **Cache Persistente:** Otimizado para não baixar modelos repetidamente ao usar Docker.
 
+## Interface Web & API (Docker Compose)
 
-## Como Usar (Docker)
+A maneira mais fácil de rodar o projeto com interface gráfica e API é utilizando o **Docker Compose**.
 
-### 1. Construir a Imagem
+### Como Rodar
 
-```bash
-docker build -t video-translator .
+1. **Subir os serviços**:
+   ```bash
+   docker compose up -d
+   ```
 
-```
+2. **Acessar a Interface**:
+   Abra o seu navegador em [http://localhost:8081](http://localhost:8081).
 
-### 2. Executar
+3. **API Local**:
+   A API estará disponível em [http://localhost:7000](http://localhost:7000).
 
-Deve passar a URL/Arquivo e o Modelo (`mira` ou `qwen`) via linha de comando.
+4. **Verificar Logs**:
+   ```bash
+   docker compose logs -f api
+   ```
 
-**No Linux / WSL:**
+5. **Reiniciar Serviços**:
+   ```bash
+   docker compose down && docker compose up -d
+   ```
 
-```bash
-# exemplo com URL do YouTube e modelo Qwen
-docker run -it --rm -v $(pwd):/app video-translator --model qwen --url "https://youtu.be/VIDEO_AQUI"
-
-# exemplo com arquivo local e modelo Mira (o arquivo input.mp4 deve estar na pasta atual)
-docker run -it --rm -v $(pwd):/app video-translator --model mira --url "input.mp4"
-
-# com GPU (servidor)
-docker run -it --rm --gpus all --env-file .env -v $(pwd):/app video-translator --model qwen --url "https://youtu.be/7AzBE0ydjXs?si=Okb7fk7086A8-aBs"
-
-```
-
-**No Windows (Command Prompt / CMD):**
-
-```cmd
-docker run -it --rm -v %cd%:/app video-translator --model qwen --url "https://youtu.be/VIDEO_AQUI"
-
-```
-
-> **Nota:** Os vídeos traduzidos serão salvos automaticamente na pasta `videos/` com o nome do modelo utilizado (ex: `translated_QWEN_video.mp4`).
-
-
-## Instalação Manual (Sem Docker)
-
-Se preferir rodar localmente fora do Docker, precisará configurar o ambiente manualmente.
-
-### Pré-requisitos de Sistema
-
-1. **Python 3.9**
-2. **FFmpeg:** Essencial para extração e montagem.
-3. **Rubberband CLI:** Obrigatório para o ajuste de tempo (Time Stretching).
-* *Windows:* Baixe o executável e adicione ao PATH do sistema.
-* *Linux:* `sudo apt-get install rubberband-cli`
-
-
-### Passo a Passo
-
-1. **Clone o repositório:**
-```bash
-git clone https://github.com/beatrizalmeidaf/audio-video-sync
-cd audio-video-sync
-
-```
-
-
-2. **Crie um ambiente virtual:**
-```bash
-conda create -n sync python=3.9 -y
-conda activate sync
-
-```
-
-
-3. **Instale as dependências:**
-```bash
-pip install -r requirements.txt
-
-```
-
-
-4. **Execute via CLI:**
-```bash
-python baixar_modelo.py # caso não tenha os arquivos baixados 
-
-python main.py --model qwen --url "https://youtu.be/..."
-
-```
-
-## Argumentos da CLI
-
-O script `main.py` aceita os seguintes argumentos:
-
-| Argumento | Obrigatório | Opções | Descrição |
-| --- | --- | --- | --- |
-| `--url` | Sim | URL ou Caminho | Link do YouTube ou caminho para arquivo local `.mp4`. |
-| `--model` | Sim | `mira`, `qwen` | Escolhe qual API de clonagem usar. |
 
 **Detalhes dos Modelos:**
 

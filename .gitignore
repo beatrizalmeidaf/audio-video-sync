@@ -6,3 +6,5 @@ videos/
 hf_cache/
 .env
 .vscode
+frontend.log
+jobs.db

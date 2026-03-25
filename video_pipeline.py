@@ -15,7 +15,7 @@ class VideoTranslatorPipeline:
             "qwen": "http://13.220.246.239:9000/voice_clone"
         }
 
-    def process(self, video_path: str, model_name: str, duration: str = "full", update_status=None) -> str:
+    def process(self, video_path: str, model_name: str, duration: str = "full", update_status=None, start_time: str = "0", job_id: str = "default") -> str:
         api_url = self.api_urls.get(model_name)
         if not api_url:
             raise ValueError(f"Modelo {model_name} inválido. Use 'qwen' ou 'mira'.")
@@ -31,16 +31,18 @@ class VideoTranslatorPipeline:
             work_video_path = video_path
             if str(duration).lower() != "full":
                 try:
-                    duration_secs = int(duration)
+                    duration_secs = int(float(duration))
+                    st_secs = int(float(start_time))
                     clipped_path = os.path.join(temp_dir, "clipped.mp4")
                     
                     if update_status:
-                        update_status(2.0, f"Cortando vídeo para {duration_secs} segundos...")
-                    print(f"Cortando vídeo para {duration_secs} segundos...")
+                        update_status(2.0, f"Cortando vídeo a partir de {st_secs}s com duração de {duration_secs}s...")
+                    print(f"Cortando vídeo de {st_secs}s até {st_secs + duration_secs}s...")
                     
                     subprocess.run([
                         "ffmpeg",
                         "-y",
+                        "-ss", str(st_secs),
                         "-i", video_path,
                         "-t", str(duration_secs),
                         "-c", "copy",
@@ -66,6 +68,7 @@ class VideoTranslatorPipeline:
                 update_status=update_status,
                 whisper_pipe=self.whisper_pipe,
                 gemma_pipe=self.gemma_pipe,
+                job_id=job_id,
             )
             
             # salva o vídeo final em /tmp para não ser apagado na limpeza
